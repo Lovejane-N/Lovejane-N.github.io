@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+    <meta name="author" content="lovejane">
+
+
+
+
+
+<title>PSI的抽象过程，从OTE到OPRF | Hexo</title>
+
+
+
+    <link rel="icon" href="/favicon.ico">
+
+
+
+
+    <!-- stylesheets list from _config.yml -->
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+
+
+
+    <!-- scripts list from _config.yml -->
+    
+    <script src="/js/script.js"></script>
+    
+    <script src="/js/tocbot.min.js"></script>
+    
+
+
+
+    
+    
+        
+            <!-- MathJax配置，可通过单美元符号书写行内公式等 -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+    "HTML-CSS": {
+        preferredFont: "TeX",
+        availableFonts: ["STIX","TeX"],
+        linebreaks: { automatic:true },
+        EqnChunk: (MathJax.Hub.Browser.isMobile ? 10 : 50)
+    },
+    tex2jax: {
+        inlineMath: [ ["$", "$"], ["\\(","\\)"] ],
+        processEscapes: true,
+        ignoreClass: "tex2jax_ignore|dno",
+        skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    },
+    TeX: {
+        equationNumbers: { autoNumber: "AMS" },
+        noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } },
+        Macros: { href: "{}" }
+    },
+    messageStyle: "none"
+    });
+</script>
+<!-- 给MathJax元素添加has-jax class -->
+<script type="text/x-mathjax-config">
+    MathJax.Hub.Queue(function() {
+        var all = MathJax.Hub.getAllJax(), i;
+        for(i=0; i < all.length; i += 1) {
+            all[i].SourceElement().parentNode.className += ' has-jax';
+        }
+    });
+</script>
+<!-- 通过连接CDN加载MathJax的js代码 -->
+<script type="text/javascript" async
+        src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
+
+
+        
+    
+
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+    <script>
+        // this function is used to check current theme before page loaded.
+        (() => {
+            const currentTheme = window.localStorage && window.localStorage.getItem('theme') || '';
+            const isDark = currentTheme === 'dark';
+            const pagebody = document.getElementsByTagName('body')[0]
+            if (isDark) {
+                pagebody.classList.add('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Dark"
+            } else {
+                pagebody.classList.remove('dark-theme');
+                // mobile
+                document.getElementById("mobile-toggle-theme").innerText = "· Light"
+            }
+        })();
+    </script>
+
+    <div class="wrapper">
+        <header>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-header header-logo"><a href="/">lovejane&#39;s Blog</a></div>
+            <div class="menu navbar-right">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+                <input id="switch_default" type="checkbox" class="switch_default">
+                <label for="switch_default" class="toggleBtn"></label>
+            </div>
+        </div>
+    </nav>
+
+    
+    <nav class="navbar-mobile" id="nav-mobile">
+        <div class="container">
+            <div class="navbar-header">
+                <div>
+                    <a href="/">lovejane&#39;s Blog</a><a id="mobile-toggle-theme">·&nbsp;Light</a>
+                </div>
+                <div class="menu-toggle" onclick="mobileBtn()">&#9776; Menu</div>
+            </div>
+            <div class="menu" id="mobile-menu">
+                
+                    <a class="menu-item" href="/archives">Posts</a>
+                
+                    <a class="menu-item" href="/category">Categories</a>
+                
+                    <a class="menu-item" href="/tag">Tags</a>
+                
+                    <a class="menu-item" href="/about">About</a>
+                
+            </div>
+        </div>
+    </nav>
+
+</header>
+<script>
+    var mobileBtn = function f() {
+        var toggleMenu = document.getElementsByClassName("menu-toggle")[0];
+        var mobileMenu = document.getElementById("mobile-menu");
+        if(toggleMenu.classList.contains("active")){
+           toggleMenu.classList.remove("active")
+            mobileMenu.classList.remove("active")
+        }else{
+            toggleMenu.classList.add("active")
+            mobileMenu.classList.add("active")
+        }
+    }
+</script>
+            <div class="main">
+                <div class="container">
+    
+    
+        <div class="post-toc">
+    <div class="tocbot-list">
+    </div>
+    <div class="tocbot-list-menu">
+        <a class="tocbot-toc-expand" onclick="expand_toc()">Expand all</a>
+        <a onclick="go_top()">Back to top</a>
+        <a onclick="go_bottom()">Go to bottom</a>
+    </div>
+</div>
+
+<script>
+    document.ready(
+        function () {
+            tocbot.init({
+                tocSelector: '.tocbot-list',
+                contentSelector: '.post-content',
+                headingSelector: 'h1, h2, h3, h4, h5',
+                collapseDepth: 1,
+                orderedList: false,
+                scrollSmooth: true,
+            })
+        }
+    )
+
+    function expand_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 6,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "collapse_toc()");
+        b.innerHTML = "Collapse all"
+    }
+
+    function collapse_toc() {
+        var b = document.querySelector(".tocbot-toc-expand");
+        tocbot.init({
+            tocSelector: '.tocbot-list',
+            contentSelector: '.post-content',
+            headingSelector: 'h1, h2, h3, h4, h5',
+            collapseDepth: 1,
+            orderedList: false,
+            scrollSmooth: true,
+        });
+        b.setAttribute("onclick", "expand_toc()");
+        b.innerHTML = "Expand all"
+    }
+
+    function go_top() {
+        window.scrollTo(0, 0);
+    }
+
+    function go_bottom() {
+        window.scrollTo(0, document.body.scrollHeight);
+    }
+
+</script>
+    
+
+    
+    <article class="post-wrap">
+        <header class="post-header">
+            <h1 class="post-title">PSI的抽象过程，从OTE到OPRF</h1>
+            
+                <div class="post-meta">
+                    
+                        Author: <a itemprop="author" rel="author" href="/">lovejane</a>
+                    
+
+                    
+                        <span class="post-time">
+                        Date: <a href="#">December 24, 2021&nbsp;&nbsp;0:00:00</a>
+                        </span>
+                    
+                    
+                        <span class="post-category">
+                    Category:
+                            
+                                <a href="/categories/%E7%BB%BC%E8%BF%B0/">综述</a>
+                            
+                        </span>
+                    
+                </div>
+            
+        </header>
+
+        <div class="post-content">
+            <blockquote>
+<p>从OTE到Multi-Point OPRF的发展，基于OT以及ROM(random oracle model)的PSI逐渐在应用层面变得实际，在理论层面，研究也在不断从精妙的protocol设计中抽象出来，衍生出利用OPRF实现PSI的重要概念。</p>
+</blockquote>
+<p>PSI全称为private set intersection，是密码学中多方安全计算MPC领域下，一个非常重要的应用分支，其协议的主要内容是，双方各自输入一个集合，如何在不揭露任何其他信息的情况下，计算并输出双方集合的交集。近年来，利用基于OTE构造OPRF的PSI成为了最有效的PSI协议种类，无论是Single-Point OPRF亦或者Multi-Point OPRF<a href="#refer-anchor-1"><sup>1</sup></a>，这些协议在计算量和通讯量上的优化使得千万级甚至亿级别的PSI在公网环境下的应用成为可能，但是从OTE到PSI的过程也是历经了十年之久，其中诞生了一些重要的协议和对OTE的优化方法，本文将从这些方面来对较为重要的结论和协议进行介绍，希望能够较完整的概括整个发展过程。<strong><em><u>下文中的讨论局限于Semi-Honest假设。</u></em></strong></p>
+<h2 id="1-PRF、OPRF"><a href="#1-PRF、OPRF" class="headerlink" title="1. PRF、OPRF"></a>1. PRF、OPRF</h2><p>PRF全称为Pseudo-Random Function，是密码学中非常重要的概念，密码学一门非常著名的入门级别公开课Stanford的cryptography I中就详细介绍过PRF的概念。PRF的定义为<script type="math/tex">F : K \times X \rightarrow Y</script>，其中<script type="math/tex">K</script>是实现决定好的key的空间，一个好的PRF需要满足两个条件，首先PRF的是一个计算efficient的函数，其次该函数与一个从<script type="math/tex">X \rightarrow Y</script> 的随机函数无法分辨。</p>
+<p>OPRF的概念完全基于PRF，但是引入了部分OT的概念，所以OPRF协议具有两个参与方，Sender和Receiver（这里与OT协议中的表示保持一致），Sender拥有一个PRF <script type="math/tex">F:K \times X \rightarrow Y</script> 以及一个保密的<script type="math/tex">k \in K</script>，Sender在OPRF协议中的输入为PRF与<script type="math/tex">k</script>，Receiver的输入为<script type="math/tex">x \in X</script>。协议执行的结果为Receiver获得<script type="math/tex">F_k(x)</script>，同时对<script type="math/tex">k</script>一无所知，而Sender则不会获得任何信息，包括<script type="math/tex">x, F_k(x)</script>。</p>
+<p>以上是PRF和OPRF的基本抽象概念，为了让这些概念看起来不那么枯燥，这里浅谈一下为什么PSI需要OPRF。最直接的原因是，OPRF本身就是PSI这个过程高度抽象后的数学表现形式之一，可能并不是唯一的抽象形式（学识有限难以就这个问题继续探讨）。当然，对于集合<script type="math/tex">A</script>和集合<script type="math/tex">B</script>，在执行PSI协议的过程时，如果集合<script type="math/tex">A, B</script>所处的空间的熵非常大的情况下，则PSI协议将会从OPRF这个抽象形式退化到一种更简单的形式，即Sender和Receiver可以用哈希函数的形式。</p>
+<h5 id="1-1-哈希函数形式"><a href="#1-1-哈希函数形式" class="headerlink" title="1.1 哈希函数形式"></a>1.1 哈希函数形式</h5><p>集合所处的空间熵大的情况意味着<script type="math/tex">|X|</script>非常大，<script type="math/tex">|X|</script>是空间的大小，则对于Sender 和 Receiver来说，对集合中的所有元素使用一个哈希函数 <script type="math/tex">H : X \rightarrow Z</script>，即使双方都拥有对方的元素的<script type="math/tex">H(x)</script>，穷举所有的元素来反推对方的集合元素是计算上不可行的，同时<script type="math/tex">H</script>的性质使其无法从结果进行反推，所以双方只需要输出<script type="math/tex">H(x)</script>的交集部分即可。</p>
+<h5 id="1-2-OPRF形式"><a href="#1-2-OPRF形式" class="headerlink" title="1.2 OPRF形式"></a>1.2 OPRF形式</h5><p>对于取值空间有限的两个元素集合，穷举是计算可以执行的情况下，哈希函数下的攻击是异常简单的，只要穷举所有的元素计算哈希值，则该协议不具任何安全性。重新考虑PSI的过程，PSI是一个求交过程，为了使得原始数据不暴露，所以要将原始数据<script type="math/tex">X</script>通过某个函数<script type="math/tex">F</script>映射到“看似”随机的输出<script type="math/tex">Y</script>上，然后在“看似”随机的输出<script type="math/tex">Y</script>上进行求交，如果映射过程<script type="math/tex">F</script>是不可逆的，随机输出的空间<script type="math/tex">|Y|</script>足够大的时候，加上双方无法进行用穷举的方法来对所有元素映射到输出空间的时候，协议就是安全的。</p>
+<p>以上的过程的<script type="math/tex">F</script>完全可以使用PRF，那么问题是如何确保双方无法穷举的手段计算所有元素的输出并进行攻击？无论是基于盲签名还是OPRF实现的思想是一样的，即Sender一方计算PRF，Receiver一方进行求交，Receiver没有<script type="math/tex">k</script>，则无法穷举，同时OPRF协议中Sender无法获取任何信息，所以即使穷举也不具有可以参照的<script type="math/tex">F_k(x)</script>。当然盲签名中利用的是基于公钥加密实现的OPRF，而近几年的几篇高效PSI实现方式则依赖于OTE。</p>
+<p>所以顺着上述思路，PSI协议的设计问题则转换为如何实现最有效的OPRF？（一个更有意思和更难的问题是在不依赖与ROM假设的情况下，如何实现OPRF甚至是效率很高的OPRF？引用2<a href="#refer-anchor-2"><sup>2</sup></a>利用Paillier这种同态加密手段构造了一种不依赖ROM假设的OPRF，非常有意思）</p>
+<h2 id="2-OTE：INKP03，KK13"><a href="#2-OTE：INKP03，KK13" class="headerlink" title="2. OTE：INKP03，KK13"></a>2. OTE：INKP03，KK13</h2><p>在理解如何用OTE构造OPRF前必须要了解的是OTE的构造方式。OTE的研究和构造在过去有了不小的突破，从INKP03<a href="#refer-anchor-3"><sup>3</sup></a>到KK13<a href="#refer-anchor-4"><sup>4</sup></a>，包括在下一部分介绍的Random OTE，都在多方安全计算的领域上发挥了不小的作用。OTE最开始是为了解决运行大量基于公钥非堆成加密体系的OT的计算量、传输量巨大的问题，提出利用少量非对称加密OT + 大量对称加密来降低计算量和传输量。</p>
+<h5 id="2-1-INKP03协议"><a href="#2-1-INKP03协议" class="headerlink" title="2.1 INKP03协议"></a>2.1 INKP03协议</h5><p>首先，INKP03是1-out-of-2 OTE 协议，下图是流程图，图中矩阵<script type="math/tex">t, q</script>的上标表示列，下标表示行</p>
+<p><img src="/2021/12/24/ot-to-psi/image-20211210170414636.png" alt="image-20211210170414636"></p>
+<p>协议输入：</p>
+<ul>
+<li>Sender 和 Receiver先确定安全参数<script type="math/tex">k</script>，同时<script type="math/tex">k</script>也是基于非对称加密的OT运行的次数；</li>
+<li>Sender的输入是长度为<script type="math/tex">n</script>的消息对，每个消息对中包含两条消息<script type="math/tex">(x^0_i, x_i^1)</script>，同时随机生成一个二进制数组<script type="math/tex">s \in_R \{0,1\}^k</script>；</li>
+<li>Receiver的输入是一个长度为<script type="math/tex">n</script>的选择数组<script type="math/tex">r</script>，<script type="math/tex">r \in \{0,1 \}^n</script>，对于任意的<script type="math/tex">r_i = 0</script>，则Receiver想获取Sender第<script type="math/tex">i</script>个消息对中的<script type="math/tex">x_i^0</script>，如果<script type="math/tex">r_i = 1</script>，则想要获取<script type="math/tex">x_i^1</script>，同时Receiver随机生成<script type="math/tex">k</script>个长度为<script type="math/tex">n</script>的随机数组<script type="math/tex">t^j</script>，如图中的Matrix T；</li>
+</ul>
+<p>协议执行过程和输出：</p>
+<ul>
+<li><p>Receiver如图中所示，由于<script type="math/tex">r</script>与任意的<script type="math/tex">t^j</script>是等长的二进制数组，所以使用<script type="math/tex">r \oplus T</script>可以得到一个新的Matrix，对于新的Matrix 和 Matrix T中的每一列，即<script type="math/tex">(t^j, t^j \oplus r)</script>，可以发现形成一个新的消息对，这时Receiver作为非对称加密下OT的<font color="Red">sender</font>，输入是消息对<script type="math/tex">(t^j, t^j \oplus r), j \in [1,k]</script>，而原本的Sender则作为非对称加密下OT的<font color="Red">receiver</font>，输入是之前随机生成的数组<script type="math/tex">s \in_R \{0,1 \}^k</script>；</p>
+</li>
+<li><p>上面的OT协议运行后Sender得到一个Matrix Q，首先Matrix Q中的每一列，当<script type="math/tex">s^j = 0, q^j = t^j,s^j = 1;</script> <script type="math/tex">q^j = t^j \oplus r</script>，即<script type="math/tex">q^j = (r \cdot s^j) \oplus t^j</script>，则对于Matrix Q的每一行，容易验证<script type="math/tex">q_i = (r_i \cdot s) \oplus t_i</script>，因为当<script type="math/tex">r_i = 0</script>时，无论<script type="math/tex">s</script>的取值，<script type="math/tex">q_i^j = t_i^j</script>，当<script type="math/tex">r_i = 1</script>时，则<script type="math/tex">q_i^j = t^j_i \oplus s^j</script>，所以对于<script type="math/tex">(q_i, q_i \oplus s)</script>这个消息对来说，其等于</p>
+<script type="math/tex; mode=display">
+\begin{align}
+(q_i, q_i \oplus s ) & = (t_i, t_i \oplus s) \text{ 当 } r_i = 0 \\
+                     & = (t_i \oplus s, t_i) \text{ 当 } r_i = 1
+\end{align}</script></li>
+<li><p>由于<script type="math/tex">s \in \{0,1\}^k</script>，当<script type="math/tex">k</script>较大时，<script type="math/tex">H(t_i \oplus s)</script>对于Receiver来说无法计算的，<script type="math/tex">H</script>是一个哈希函数，所以Sender 发送<script type="math/tex">(H(q_i)\oplus x_i^0,</script> <script type="math/tex">H(q_i \oplus s)\oplus x_i^1)</script> ，Receiver只能解开其中一个，即<script type="math/tex">x_i^{r_i}</script>，以上就是协议的全部内容。</p>
+</li>
+</ul>
+<h5 id="2-2-KK13协议"><a href="#2-2-KK13协议" class="headerlink" title="2.2 KK13协议"></a>2.2 KK13协议</h5><p>在下图中是KK13协议的流程图，Receiver初始构造Matrix T是通过每一行来构造，看似与INKP03协议非常不同，实际上后面我们会发现KK13协议是INKP03协议的直接扩展。图中矩阵<script type="math/tex">t, q</script>的上标表示列，下标表示行。</p>
+<p><img src="/2021/12/24/ot-to-psi/image-20211215155950552.png" alt="image-20211215155950552"></p>
+<p>协议输入：</p>
+<ul>
+<li>Sender 和 Receiver先确定安全参数<script type="math/tex">k</script>，同时<script type="math/tex">k</script>也是基于非对称加密的OT运行的次数，其次要确定一套公用的code <script type="math/tex">(c_1, c_2, ..., c_L)</script>，<script type="math/tex">c_L \in \{0,1\}^k</script> <script type="math/tex">L</script>是Receiver选择的范围，也是Sender的每个消息“对”包含的消息个数，其用于混淆Receiver的选择，同时保证安全性；</li>
+<li>Sender的输入是长度为<script type="math/tex">n</script>的消息“对”，每个消息对中包含<script type="math/tex">L</script>条消息<script type="math/tex">(x^1_i, x_i^2,..., x_i^L)</script>，同时随机生成一个二进制数组<script type="math/tex">s \in_R \{0,1\}^k</script>；</li>
+<li>Receiver的输入是一个长度为<script type="math/tex">n</script>的选择数组<script type="math/tex">r</script>，<script type="math/tex">r \in \{1,2,...,L \}^n</script>，对于任意的<script type="math/tex">r_i = l</script>，则Receiver想获取Sender第<script type="math/tex">i</script>个消息对中的<script type="math/tex">x_i^l</script>，同时Receiver随机生成<script type="math/tex">n</script>个长度为<script type="math/tex">k</script>的随机数组<script type="math/tex">t_i</script>，如图中的Matrix T；</li>
+</ul>
+<p>协议执行过程和输出：</p>
+<ul>
+<li><p>Receiver如图中所示，根据Matrix T，生成另一个Matrix Tc，Tc中的每一行<script type="math/tex">tc_i = t_i \oplus c_{r_i}</script>，然后将两个矩阵根据列划分成<script type="math/tex">k</script>列，则得到<script type="math/tex">(t^j, tc^j), k</script> 个消息对，这些消息对可以用作非对称加密下OT的输入，这时Receiver成为<font color="Red">sender</font>，Sender成为<font color="Red">receiver</font>，输入是之前随机生成的数组<script type="math/tex">s \in_R \{0,1 \}^k</script>；</p>
+</li>
+<li><p>上面的OT协议运行后Sender得到一个Matrix Q，首先Matrix Q中的每一列，当<script type="math/tex">s^j = 0, q^j = t^j,s^j = 1,</script> <script type="math/tex">q^j = tc^j</script>，然后分析Matrix Q的每一行发现</p>
+<script type="math/tex; mode=display">
+\begin{align}
+q_i &= t_i \oplus (c_{r_i} \land s), \land : AND \\
+(q_i \oplus (c_l\land s)) &= t_i, l = r_i, \\
+                & = t_i \oplus (c_{r_i} \land s) \oplus (c_l \land s), l \neq r_i
+\end{align}</script></li>
+<li><p>如果<script type="math/tex">(c_{r_i} \land s) \oplus (c_l \land s)</script> 是随机的，则对于Receiver来说 <script type="math/tex">H(t_i \oplus (c_{r_i} \land s) \oplus (c_l \land s))</script> 是无法计算的，而这要求 <script type="math/tex">c_{l_1}, c_{l_2}, l_1 \neq l_2</script> 之间的距离足够远，否则可能得到很多个0，极大程度上降低了安全参数<script type="math/tex">k</script>。如果存在上述code，则Sender可以发送 <script type="math/tex">\{m_{i,l} = H(q_i \oplus (c_l \oplus s))\oplus x_i^l, i \in [1,n], l \in [1,L]\}</script>，其中对于每个<script type="math/tex">i</script> ，只有Receiver选择的那条才可以进行解密得到。</p>
+</li>
+</ul>
+<h5 id="2-3-其他的一些问题"><a href="#2-3-其他的一些问题" class="headerlink" title="2.3 其他的一些问题"></a>2.3 其他的一些问题</h5><p>首先，我们前文中提到KK13协议是INKP03协议的直接扩展，原因是虽然INKP03协议中构建Matrix T是通过列构建的，但是同样也可以通过KK13这种行来构造，只要令<script type="math/tex">(c_0, c_1) = (\vec{0}, \vec{1})</script>即可，而INKP03协议无需讨论code安全性的原因是<script type="math/tex">c_0, c_1</script>的距离是最远的，所以<script type="math/tex">(c_0 \land s) \oplus (s \land c_1) = s</script>，而<script type="math/tex">s</script>本身就是随机选取的。所以KK13协议是INKP03协议的直接扩展。</p>
+<p>Sender发送的消息很长的情况下的处理方式，当<script type="math/tex">x_i^1, ... ,x_i^L</script>的长度很长时，上面的协议可以转换为对对称加密密钥Key的OTE，Receiver拿到Key，然后Sender用对称加密对消息进行加密，Receiver同样只能拿到一个Key。</p>
+<p>当<script type="math/tex">n</script>特别大的时候，非对称加密下OT消耗的问题，由于当<script type="math/tex">n</script>特别大的时候，直接进行OT不现实，因为拿RSA体系来说，<script type="math/tex">n</script>越大意味着密钥长度越长，消耗同样巨大，而密钥长度带来的还是不必要的安全性提升（从128提升到512在计算上都是不可能的，这里的128、512都是对称加密下的安全参数，非对称加密要达到128需要远长于128的大数分解）。所以和上面一个小问题类似，初始的OT协议可以传输对称加密的密钥Key，然后Receiver将加密后的两个Matrix发送给Sender，Sender进行解密拼接即可。</p>
+<h2 id="3-Random-OTE-随机OTE"><a href="#3-Random-OTE-随机OTE" class="headerlink" title="3. Random OTE 随机OTE"></a>3. Random OTE 随机OTE</h2><p>在一些OT、OTE的应用环境下，有时候OT协议中，Sender的输入以及Receiver的输出是随机的，在这种情况下Gilad Asharov<a href="#refer-anchor-5"><sup>5</sup></a>等人提出了Random OTE的想法，即将信息内禀在Receiver构造Matrix的时候，而由Sender获取Matrix的随机OT来保证随机性，从而节省最后一步中，由Sender向Receiver发送消息。</p>
+<p>与传统OTE不同的是，由于Random OTE的信息是内禀在Receiver的Matrix中的，所以Random OTE中Sender的输入并不包含消息对，同时在协议执行结束的时候Sender会获得消息对。这是与传统OTE最大的不同。</p>
+<h5 id="3-1-1-2-Random-OTE"><a href="#3-1-1-2-Random-OTE" class="headerlink" title="3.1 1-2 Random OTE"></a>3.1 1-2 Random OTE</h5><p>首先先来介绍1-out-of-2 Random OTE，下图是流程图，图中矩阵<script type="math/tex">t, q</script>的上标表示列，下标表示行</p>
+<p><img src="/2021/12/24/ot-to-psi/image-20211215161829477.png" alt="image-20211215161829477"></p>
+<p>协议输入：</p>
+<ul>
+<li>Sender和Receiver先确认安全参数<script type="math/tex">k</script>；</li>
+<li>Sender的输入是一个随机生成的<script type="math/tex">s \in_R \{0,1\}^k</script>；</li>
+<li>Receiver的输入是一个长度为<script type="math/tex">n</script>的选择数组，同时Receiver生成<script type="math/tex">k</script>个长度为<script type="math/tex">n</script>的随机数组<script type="math/tex">t^j</script>组成Matrix T；</li>
+</ul>
+<p>协议执行过程和输出</p>
+<ul>
+<li>Receiver对Matrix T中的每一列异或选择数组<script type="math/tex">r</script>，则得到另一个Matrix，其中每一列是<script type="math/tex">t^j \oplus r</script>；</li>
+<li>Sender使用<script type="math/tex">k</script>次传统OT获取<script type="math/tex">(t^j, t^j\oplus r)</script>中的一条消息，此时如前文中OTE中一样，取决于<script type="math/tex">s^j</script>，然后Sender用<script type="math/tex">k</script>列消息构建Matrix Q。Matrix Q中的每一列满足<script type="math/tex">q^j = t^j \oplus (r\cdot s^j)</script>，所以其中的每一行满足条件<script type="math/tex">q_i = t_i \oplus (r_i \cdot s)</script>；</li>
+<li>对于Sender来说，此时需要构建输出，由于<script type="math/tex">(x_{i}^0 = H(q_i), x_{i}^1 = H(q_i \oplus s))</script>中Receiver仅仅能获知一条，即<script type="math/tex">x_{i}^{r_i}</script>，所以Sender可以构建随机消息对<script type="math/tex">(x_{i}^0, x_{i}^1)</script>；</li>
+<li>对于Receiver来说，则可以直接输出<script type="math/tex">x_{i}^{r_i} = H(t_i)</script>，无需等待Sender发送任何消息，前文中在INKP OTE中讨论过为什么是<script type="math/tex">H(t_i)</script>；</li>
+</ul>
+<h5 id="3-2-1-L-Random-OTE"><a href="#3-2-1-L-Random-OTE" class="headerlink" title="3.2 1-L Random OTE"></a>3.2 1-L Random OTE</h5><p>L选1 OTE协议与上面2选1 OTE十分类似，Sender需要Receiver的构造矩阵来生成随机消息对，</p>
+<p><img src="/2021/12/24/ot-to-psi/image-20211215155839549.png" alt="image-20211215155839549"></p>
+<p>协议输入：</p>
+<ul>
+<li>Sender 和 Receiver先确定安全参数<script type="math/tex">k</script>，同时<script type="math/tex">k</script>也是基于非对称加密的OT运行的次数，其次要确定一套公用的code <script type="math/tex">(c_1, c_2, ..., c_L)</script>，<script type="math/tex">c_L \in \{0,1\}^k</script> <script type="math/tex">L</script>是Receiver选择的范围，也是Sender的每个消息“对”包含的消息个数，其用于混淆Receiver的选择，同时保证安全性；</li>
+<li>Sender的输入是长度为<script type="math/tex">n</script>的随机生成的二进制数组<script type="math/tex">s \in_R \{0,1\}^k</script>；</li>
+<li>Receiver的输入是一个长度为<script type="math/tex">n</script>的选择数组<script type="math/tex">r</script>，<script type="math/tex">r \in \{1,2,...,L \}^n</script>，对于任意的<script type="math/tex">r_i = l</script>，则Receiver想获取Sender第<script type="math/tex">i</script>个消息对中的<script type="math/tex">x_i^l</script>，同时Receiver随机生成<script type="math/tex">n</script>个长度为<script type="math/tex">k</script>的随机数组<script type="math/tex">t_i</script>，如图中的Matrix T；</li>
+</ul>
+<p>协议执行过程和输出：</p>
+<ul>
+<li><p>Receiver如图中所示，根据Matrix T，生成另一个Matrix Tc，Tc中的每一行<script type="math/tex">tc_i = t_i \oplus c_{r_i}</script>，然后将两个矩阵根据列划分成<script type="math/tex">k</script>列，则得到<script type="math/tex">(t^j, tc^j), k</script> 个消息对，这些消息对可以用作非对称加密下OT的输入，这时Receiver成为<font color="Red">sender</font>，Sender成为<font color="Red">receiver</font>，输入是之前随机生成的数组<script type="math/tex">s \in_R \{0,1 \}^k</script>；</p>
+</li>
+<li><p>上面的OT协议运行后Sender得到一个Matrix Q，首先Matrix Q中的每一列，当<script type="math/tex">s^j = 0, q^j = t^j,s^j = 1,</script> <script type="math/tex">q^j = tc^j</script>，然后分析Matrix Q的每一行发现</p>
+<script type="math/tex; mode=display">
+\begin{align}
+q_i &= t_i \oplus (c_{r_i} \land s), \land : AND \\
+(q_i \oplus (c_l\land s)) &= t_i, l = r_i, \\
+                & = t_i \oplus (c_{r_i} \land s) \oplus (c_l \land s), l \neq r_i
+\end{align}</script></li>
+<li><p>上面对<script type="math/tex">\{c_l\}</script>的作用进行过简要的介绍，这里直接介绍一下Sender如何构建随机消息，由于<script type="math/tex">q_i \oplus (c_l \land s), l \in [1,L]</script>中Receiver只能知晓其中一条，所以Sender可以构建消息“对”<script type="math/tex">\{ x_{i}^l \}, x_i^l = H(q_i \oplus (c_l \land s))</script>；</p>
+</li>
+<li><p>Receiver则也可以直接获取<script type="math/tex">x_i^{r_i} = H(t_i)</script>，无需收到Sender发送的任何消息 ，省去最后一轮通讯；</p>
+</li>
+</ul>
+<h5 id="3-3-Random-OTE和OPRF的联系"><a href="#3-3-Random-OTE和OPRF的联系" class="headerlink" title="3.3 Random OTE和OPRF的联系"></a>3.3 Random OTE和OPRF的联系</h5><p>在前文中我们对OTE、Random OTE进行了较为详细的描述和介绍，现在终于可以回到OPRF的主题上。首先可以观察的是Random OTE的传统OTE的一种变体，省去了输入，为Sender增加了输出，同时减少了最后一轮的通信，这在L选1中可能会节省大量的通信量。接下来的问题是，Random OTE和OPRF之间的关系是什么？其实仔细观察可以发现Random OTE就是一种OPRF的构造形式。</p>
+<p>重新回顾OPRF的定义，在OPRF中，Sender需要拥有<script type="math/tex">k, F</script>，Receiver输入<script type="math/tex">x</script>，最终Receiver拿到<script type="math/tex">F_k( x)</script>，而Sender对于<script type="math/tex">F_k(x),x</script>一无所知。首先对于每个<script type="math/tex">x</script>，<script type="math/tex">x \in X</script>，<script type="math/tex">X</script>是Receiver的输入的空间。则对于2选1的Random OTE来说，<script type="math/tex">X = \{ 0,1\}</script>，也就是说Receiver的选择输入空间是<script type="math/tex">0,1</script>，而Sender虽然可以穷举输入空间，但是不能获知Receiver输入和输出的是哪条信息。对于广义的其他OPRF也是如此，Sender永远都可以穷举输入空间，得到输出空间，但是Sender却无法在其中对Receiver的输入产生映射。</p>
+<p>对于L选1的Random OTE同样也是如此，如果<script type="math/tex">L = 2^\sigma</script>，则Receiver的输入空间是<script type="math/tex">\{0,1\}^\sigma</script> ，同样构造了OPRF。</p>
+<h2 id="4-基于OTE的OPRF到PSI"><a href="#4-基于OTE的OPRF到PSI" class="headerlink" title="4. 基于OTE的OPRF到PSI"></a>4. 基于OTE的OPRF到PSI</h2><p>我们知道，Random OTE是一种OPRF的构造方式，接下来我们对如何构建这种OPRF进行更为详细介绍，同时对两个比较重要的PSI协议进行较为详细的描述，分别是PSZ18<a href="#refer-anchor-6"><sup>6</sup></a>协议和CM18<a href="#refer-anchor-1"><sup>1</sup></a>协议。</p>
+<h5 id="4-1-OPRF的构建过程"><a href="#4-1-OPRF的构建过程" class="headerlink" title="4.1 OPRF的构建过程"></a>4.1 OPRF的构建过程</h5><p>上文中对如何Random OTE和OPRF的关系进行了简单介绍，下面详细来描述OPRF的构建过程。假设Receiver的输入<script type="math/tex">x</script>的所处空间为<script type="math/tex">X = \{0,1 \}^\sigma</script>，当<script type="math/tex">\sigma = 1</script>时，OPRF直接将退化为2选1 Random OTE。当<script type="math/tex">\sigma > 1</script>时，则情况略有不同，我们知道对于L选1的Random OTE来说，Receiver和Sender最开始要约定好一套code，<script type="math/tex">c_l, l \in [1,L]</script>，对于Receiver的每个选择，Receiver在生成Matrix的时候都会使用相应的<script type="math/tex">c_{r_i} \oplus t_i</script>生成另一个矩阵。</p>
+<p>我们知道，如果<script type="math/tex">L = 2^\sigma</script>，则我们有对于<script type="math/tex">X</script>中的每一个元素，都有<script type="math/tex">x_l \rightarrow c_l</script>的双射，满足关系<script type="math/tex">x_l \rightarrow c_{x_l}</script>。则Receiver在OPRF中的输入是<script type="math/tex">x</script>等价于Receiver在Random OTE中挑选第<script type="math/tex">x</script>个消息，所以成功构建了OPRF，最终Receiver拿到的第<script type="math/tex">x</script>消息，就是<script type="math/tex">F_k(x)</script>，因为我们知道<script type="math/tex">H(q_i \oplus (c_l \land s))</script>对于每个<script type="math/tex">c_l</script>都不同，则对于每个<script type="math/tex">x_l</script>都不同。</p>
+<p>而当OPRF用在PSI中时，不仅要Receiver拿到输出，Sender也要对自己的元素拿到输出，由于Sender的输入空间也一定是<script type="math/tex">X</script>，所以我们一定有，对于每一个Sender的输出<script type="math/tex">x_s</script>，我们都可以找到一个<script type="math/tex">c_s</script>与之相对应，为<script type="math/tex">c_{x_s}</script> ，所以可以计算</p>
+<script type="math/tex; mode=display">
+F_k(x_s) = H(q_i \oplus (c_{x_s} \land s))</script><p>根据前文的讨论可知，<script type="math/tex">k = s</script>，是Sender作为初始OT的receiver方时的选择数组。</p>
+<h5 id="4-2-PSZ18协议"><a href="#4-2-PSZ18协议" class="headerlink" title="4.2 PSZ18协议"></a>4.2 PSZ18协议</h5><p>PSZ18协议中，用到了在不少PSI算法中都使用到的Cuckoo Hash的方法，Cuckoo Hash的想法在于尽可能多的将元素放在一个Hash Table中，为了避免碰撞，Cuckoo Hash选择增加Hash的个数，如果发生碰撞，就将之前放在其中的元素拿出来，然后选取新的Hash函数，直到元素被放进去或者某个元素的所有Hash函数都已经尝试过，对于那些没有最终放入的元素，放在一个特殊的列表中。</p>
+<p>当然，只有一方可以使用Cuckoo Hash的方法，另一方则需要用全部的Hash函数对全部的元素都做一边Hash Table，这样才能确保交集中元素不会被漏掉。</p>
+<p>原文中花了大量的篇幅来讨论Cuckoo Hash中Hash Table的大小、Hash函数个数的选择等等问题。我们这里不再进行赘述，主要集中在如何做PSI协议层面。</p>
+<p>另一个值得一提的Hash技巧是permutation-based Hash，即将元素放入Hash Table的时候，在位置中隐藏部分元素的信息，进而起到缩短放入元素的长度的作用。具体做法是将<script type="math/tex">x</script>分为<script type="math/tex">x_l |x_r</script>两个部分，假设<script type="math/tex">x_l \in \{ 0,1\}^\mu</script>，找一个函数<script type="math/tex">f</script>使得<script type="math/tex">f(x_r) \rightarrow \{0,1 \}^\mu</script>，其中<script type="math/tex">2^\mu</script>是Hash Table的大小，然后计算<script type="math/tex">f(x_r)\oplus x_l</script>就是放入元素的Hash Table中Bin的编号。所以我们可以看到<script type="math/tex">x_r</script>所处的空间应小于<script type="math/tex">f(x_r)</script>即<script type="math/tex">x_l</script>也就是Hash Table的大小，否则就会产生n对1映射，更有可能产生多个元素放入同一个bin中的现象。</p>
+<p><img src="/2021/12/24/ot-to-psi/image-20211215213501423.png" alt="image-20211215213501423"></p>
+<p>上图是Hash后的Sender和Receiver拿到的Hash Table，其中Receiver的每个bin中只有一个元素，而Sender的bin中可能有多个元素，最多可能是<script type="math/tex">D</script>个（概率决定）。所以整个PSI协议的过程就是双方先生成Hash Table，然后Receiver根据每个Hash bin中计算OPRF函数，同时Sender也对自己集合中的元素计算OPRF函数值，然后Sender将元素对应的OPRF打乱后发送给Receiver，Receiver求得最终的交集并输出。</p>
+<p>协议输入：</p>
+<ul>
+<li>Sender输入集合<script type="math/tex">X_S = \{ x_{s,1}, x_{s,2}, ..., x_{s,n_s}\}</script>；</li>
+<li>Receiver输入集合<script type="math/tex">X_R = \{ x_{R,1}, x_{R,2},...,x_{R,n_R} \}</script>；</li>
+<li>Sender和Receiver约定安全参数<script type="math/tex">k</script>，以及<script type="math/tex">x_l | x_r</script>中<script type="math/tex">x_r</script>的空间大小<script type="math/tex">L</script>，即1-Out-Of-L OTE中的<script type="math/tex">L</script>，同时约定Hash Table 的大小<script type="math/tex">2^b</script>，即<script type="math/tex">x_l</script>的空间大小。同时约定一套code<script type="math/tex">\{c_l \}</script>，每个code长度为<script type="math/tex">b</script>，有<script type="math/tex">L</script>个，即<script type="math/tex">c_l, l \in [1,L], c_l \in \{0,1\}^b</script>；</li>
+</ul>
+<p>协议执行过程与输出：</p>
+<ul>
+<li><p>首先像前图中一样，Sender和Receiver将自己的集合元素全部放入Hash Table中，其中Receiver放入Cuckoo Hash Table中，Sender放入普通Hash Table中，其中可能会有多个Hash函数使用；</p>
+</li>
+<li><p>可知Hash Table的大小为<script type="math/tex">2^b</script>，所以我们需要执行一个Random OTE协议，在这个协议中，Receiver的输入是一个选择数组，选择<script type="math/tex">[1,L]</script>中的一个随机元素，而前文中我们知道Hash Table中放置的元素即<script type="math/tex">x_r</script>的取值范围也是<script type="math/tex">[0,L-1]</script>，所以可以用<script type="math/tex">x_r</script>的真实值作为选择数组中的值，所以Receiver具有<script type="math/tex">2^b</script>长度的一个选择数组，为</p>
+<script type="math/tex; mode=display">
+r = (x_r^1, x_r^2,\cdots,x_r^{2^b})_R</script></li>
+<li><p>Sender的输入是普通的Hash Table，用到了多个Hash函数，一个bin中可能包含多个值。而在Random OTE中，Sender则需要再输入一个随机的选择数组，也就是在Random OTE协议中的<script type="math/tex">s</script>，根据实现决定的安全参数<script type="math/tex">k</script>，则<script type="math/tex">s \in \{0,1\}^k</script>；</p>
+</li>
+<li><p>然后如同Random OTE中一样，Receiver构建Matrix T，Matrix Tc，然后Sender接受Matrix根据选择数组<script type="math/tex">s</script>，构建Matrix Q，其中每一行满足<script type="math/tex">q_i = t_i \oplus(s \land c_{x_{r,R}^i})</script>。此时Receiver无需接受Sender返回任何消息，可以直接构建对应于自己输入的OPRF，即<script type="math/tex">H(t_i)</script>。同时Sender可以对自己第<script type="math/tex">i</script>个bin中元素<script type="math/tex">x_{r,S}^{i,1},x_{r,S}^{i,2},...,x_{r,S}^{i,D}</script>分别计算OPRF</p>
+<script type="math/tex; mode=display">
+F_k(x_{r,S}^{i,j}) = H(q_i \oplus (s \land c_{x_{r,s}^{i,j}})), j \in [1,D]</script></li>
+<li><p>Sender在对自己的所有元素计算完OPRF之后，将得到的所有OPRF值打乱后发送给Receiver，Receiver在其中查找是否有与自己得到的OPRF重合的值，如果有，则自己的某个元素在交集中。可以将OPRF直接打乱发送的原因是<script type="math/tex">q_i = t_i \oplus (s\land c_{x_{r,R}^i})</script>，其中<script type="math/tex">t_i</script>是随机的，所以即使<script type="math/tex">x_{r,R}^{i_1} = x_{r,R}^{i_2}</script>，但是<script type="math/tex">t_{i_1} \neq t_{i_2}</script>，所以<script type="math/tex">q_{i_1} \neq q_{i_2}</script>，最终拿到的Hash函数则不同。</p>
+</li>
+</ul>
+<h5 id="4-3-CM18协议"><a href="#4-3-CM18协议" class="headerlink" title="4.3 CM18协议"></a>4.3 CM18协议</h5><p>与上面PSZ18协议不同的是，CM18协议是一种multi-point OPRF PSI，而PSZ18被称为single-point OPRF PSI，之所以用multi-point可以看到在PSI协议的构建中，某个元素是否在集合中取决于在矩阵中的多个点的位置，而并非像PSZ18协议中，用单个OPRF描述。</p>
+<p>与PSZ18相同的是，CM18协议也依赖于ROM假设、Random OTE协议。所以Receiver同样需要构建Matrix，而该协议核心的部分就是Matrix的构建部分，首先我们将介绍如何去构建Matrix。</p>
+<p>下图是Receiver生成Matrix的过程。</p>
+<p><img src="/2021/12/24/ot-to-psi/image-20211216114914182.png" alt="image-20211216114914182"></p>
+<p>Receiver先生成一个<script type="math/tex">m \times k</script>的全<script type="math/tex">1</script>矩阵，即<script type="math/tex">m</script>行<script type="math/tex">k</script>列，记为Matrix D，然后Receiver需要一个PRF函数，将集合中的元素映射到<script type="math/tex">\{0,1,...,m\}^w</script>，也就是<script type="math/tex">F_k(x^i_R) = [F_1 | F_2 | ... |F_w]</script>，其中<script type="math/tex">F_j \in [1,2,...,m]</script>。然后对于每个元素都有上述PRF函数的映射，然后将映射到的值，对应的Matrix D中的第<script type="math/tex">j</script>列、第<script type="math/tex">F_j</script>行置为<script type="math/tex">0</script>。</p>
+<p>然后Receiver生成一个随机Matrix A，同时异或上面生成的Matrix D，得到Matrix B。Matrix A 和 Matrix B的每一列将作为OT中的输入。这里我们可知，如果一个元素<script type="math/tex">x^* \in X_R</script>，也就是Receiver的集合中，那么所有<script type="math/tex">H(x^*)</script>所对应的位置中，Matrix D的值全为0，所以Matirx B中这些位置的值与Matrix A中一致（异或0等于自身）。</p>
+<p>以上就是整个Matrix生成的逻辑和步骤，下面来介绍整个PSI协议流程。</p>
+<p>协议输入：</p>
+<ul>
+<li>Sender输入集合<script type="math/tex">X_S = \{ x_{s,1}, x_{s,2}, ..., x_{s,n_s}\}</script>；</li>
+<li>Receiver输入集合<script type="math/tex">X_R = \{ x_{R,1}, x_{R,2},...,x_{R,n_R} \}</script>；</li>
+<li>Sender和Receiver约定安全参数<script type="math/tex">k</script>，也就是这里的<script type="math/tex">w</script>，同时Receiver输入一个PRF的key <script type="math/tex">k</script>，Sender输入一个关于Matrix的选择数组<script type="math/tex">s \in \{0,1\}^w</script>；</li>
+</ul>
+<p>协议执行过程与输出：</p>
+<ul>
+<li><p>Receiver先按照上面图中所示构建Matrix D、A、B，然后将Matrix A、B中的<script type="math/tex">w</script>列作为2选1 OT的输入，Sender则输入<script type="math/tex">s</script>来选择，如果<script type="math/tex">s^j = 0</script>，则选择<script type="math/tex">A^j</script>列，如果<script type="math/tex">s^j =1</script>，则选择<script type="math/tex">B^j</script>列；</p>
+</li>
+<li><p>Sender在拿到所有选择后的列后构建Matrix C，其中我们知道Matrix C中的每一列满足<script type="math/tex">C^j = A^j \oplus (s^j \cdot D^j)</script>，同时我们也有每一行满足</p>
+<script type="math/tex; mode=display">
+C_i = A_i \oplus (s \land D_i), i \in [1,m]</script><p>此时Receiver发送PRF的key给Sender，Sender可以计算自己集合中所有元素的PRF值；</p>
+</li>
+<li><p>Sender对于每个自己集合中的元素，都可以计算<script type="math/tex">F_k(x^i_S) = [F_1^i|F_2^i|...|F_w^i]</script>，然后找到Matrix C中对应的<script type="math/tex">w</script>个位置，我们知道对于这些位置而言，如果<script type="math/tex">x_S^i \in X_R</script>，也就是在交集中，则一定有对应的位置<script type="math/tex">D_i^j = 0</script>，所以一定有Matrix C的位置与Matrix A的位置的值一样。所以Sender此时把这些对应位置的值抽出来，计算</p>
+<script type="math/tex; mode=display">
+H(C_1^{F_1^i} |C_2^{F_2^i}|...|C_w^{F_w^i} ), i \in [1,|X_s|]</script><p>发送给Receiver，注意是对每一个元素都做这样的计算；</p>
+</li>
+<li><p>Receiver在接受到这些值后，所作的操作就比较简单了，我们知道对于在交集里的元素，一定有</p>
+<script type="math/tex; mode=display">
+H(C_1^{F_1^i} |C_2^{F_2^i}|...|C_w^{F_w^i} ) = H(A_1^{F_1^i} |A_2^{F_2^i}|...|A_w^{F_w^i} )</script><p>所以Receiver可以将自己集合中的所有元素的对应的Matrix A中的值抽离出来，计算上述Hash 值，然后查找是否在Receiver发送过来的集合中有重合，若有，则该元素在交集里。</p>
+</li>
+</ul>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p><div id="refer-anchor-1"></div> [1] Chase, Melissa, and Peihan Miao. “Private set intersection in the internet setting from lightweight oblivious PRF.” Annual International Cryptology Conference. Springer, Cham, 2020.</p>
+<p><div id="refer-anchor-2"></div> [2] Jarecki, Stanisław, and Xiaomin Liu. “Efficient oblivious pseudorandom function with applications to adaptive OT and secure computation of set intersection.” <em>Theory of Cryptography Conference</em>. Springer, Berlin, Heidelberg, 2009.</p>
+<p><div id="refer-anchor-3"></div> [3] Ishai, Yuval, et al. “Extending oblivious transfers efficiently.” Annual International Cryptology Conference. Springer, Berlin, Heidelberg, 2003.</p>
+<p><div id="refer-anchor-4"></div> [4] Kolesnikov, Vladimir, and Ranjit Kumaresan. “Improved OT extension for transferring short secrets.” Annual Cryptology Conference. Springer, Berlin, Heidelberg, 2013.</p>
+<p><div id="refer-anchor-5"></div> [5] Asharov, Gilad, et al. “More efficient oblivious transfer and extensions for faster secure computation.” Proceedings of the 2013 ACM SIGSAC conference on Computer &amp; communications security. 2013.</p>
+<p><div id="refer-anchor-6"></div> [6] Pinkas, Benny, Thomas Schneider, and Michael Zohner. “Scalable private set intersection based on OT extension.” ACM Transactions on Privacy and Security (TOPS) 21.2 (2018): 1-35.</p>
+
+        </div>
+
+        
+            <section class="post-copyright">
+                
+                    <p class="copyright-item">
+                        <span>Author:</span>
+                        <span>lovejane</span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>Permalink:</span>
+                        <span><a href="http://example.com/2021/12/24/ot-to-psi/">http://example.com/2021/12/24/ot-to-psi/</a></span>
+                    </p>
+                
+                
+                    <p class="copyright-item">
+                        <span>License:</span>
+                        <span>Copyright (c) 2019 <a target="_blank" rel="noopener" href="http://creativecommons.org/licenses/by-nc/4.0/">CC-BY-NC-4.0</a> LICENSE</span>
+                    </p>
+                
+                
+                     <p class="copyright-item">
+                         <span>Slogan:</span>
+                         <span>星星之火，可以燎原</span>
+                     </p>
+                
+
+            </section>
+        
+        <section class="post-tags">
+            <div>
+                <span>Tag(s):</span>
+                <span class="tag">
+                    
+                    
+                        <a href="/tags/PSI/"># PSI</a>
+                    
+                        
+                </span>
+            </div>
+            <div>
+                <a href="javascript:window.history.back();">back</a>
+                <span>· </span>
+                <a href="/">home</a>
+            </div>
+        </section>
+        <section class="post-nav">
+            
+            
+        </section>
+
+
+    </article>
+</div>
+
+            </div>
+            <footer id="footer" class="footer">
+    <div class="copyright">
+        <span>© lovejane | Powered by <a href="https://hexo.io" target="_blank">Hexo</a> & <a href="https://github.com/Siricee/hexo-theme-Chic" target="_blank">Chic</a></span>
+    </div>
+</footer>
+
+    </div>
+</body>
+
+</html>
